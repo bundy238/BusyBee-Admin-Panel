@@ -1,0 +1,17 @@
+.users-page 
+{
+  padding: 16px;
+  background: #F6F1EC;
+  min-height: 100vh;
+}
+  
+.users-actions
+{
+  margin-bottom: 16px;
+}
+  
+.role-select 
+{
+  width: 140px;
+}
+  

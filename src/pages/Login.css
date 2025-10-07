@@ -1,0 +1,31 @@
+.login-page 
+{
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    background: #F6F1EC; 
+}
+  
+.login-card 
+{
+    width: 500px;
+    text-align: center;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 12px;
+}
+  
+.login-logo img 
+{
+    width: 250px;
+    margin-bottom: 16px;
+}
+  
+.login-title 
+{
+    margin-bottom: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+}
+  

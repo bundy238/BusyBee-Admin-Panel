@@ -1,0 +1,34 @@
+.app-layout 
+{
+    min-height: 100vh;
+}
+  
+.logo 
+{
+    color: #fff;
+    padding: 16px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.app-header
+{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    background: #19223E;
+}
+  
+.app-content 
+{
+    padding: 16px;
+    background: #F6F1EC;
+    min-height: calc(100vh - 64px);
+}
+
+.text-panel
+{
+    color: #fff;    
+    font-size: 18px;
+}
