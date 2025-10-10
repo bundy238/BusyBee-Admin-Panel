@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Table, Button, Space, Modal, Form, Input, message, Select } from 'antd';
-import api from '../api/client';
-import './Works.css';
+import { useEffect, useState } from "react";
+import { Table, Button, Space, Modal, Form, Input, message, Select } from "antd";
+import api from "../api/client";
 
 export default function Works() {
   const [data, setData] = useState([]);
@@ -12,20 +11,21 @@ export default function Works() {
 
   const fetchCats = async () => {
     try {
-      const res = await api.get('/api/Category/all');
-      setCats((res?.data?.data || res?.data || []).map(c => ({
-        label: c.name, value: c.id
-      })));
-    } catch {}
+      const res = await api.get("/api/Category/all");
+      const list = res?.data?.data || res?.data || [];
+      setCats(list.map((c) => ({ label: c.name, value: Number(c.id) })));
+    } catch {
+      message.error("Не вдалося завантажити категорії");
+    }
   };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/api/Work/all');
+      const res = await api.get("/api/Work/all");
       setData(res?.data?.data || res?.data || []);
     } catch {
-      message.error('Не удалось загрузить работы');
+      message.error("Не вдалося завантажити роботи");
     } finally {
       setLoading(false);
     }
@@ -36,132 +36,128 @@ export default function Works() {
     fetchData();
   }, []);
 
-  const add = async (values) => {
+  const addWork = async (values) => {
     try {
-      const { categoryId, name, description } = values;
-      await api.post(`/api/Work?categoryId=${categoryId}`, { name, description });
-      message.success('Добавлено');
-      setOpen(false);
-      form.resetFields();
-      fetchData();
-    } catch {
-      message.error('Ошибка добавления');
-    }
-  };
+      const payload = {
+        id: 0,
+        name: values.name?.trim(),
+        description: values.description?.trim() || "",
+        workCategory: { id: Number(values.categoryId) }, 
+      };
 
-  const update = async (row) => {
-    try {
-      await api.put(`/api/Work/update/${row.id}`, {
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        workCategory: row.workCategory,
+      await api.post("/api/Work", payload, {
+        params: { categoryId: Number(values.categoryId) },
+        headers: { "Content-Type": "application/json" },
       });
-      message.success('Сохранено');
-    } catch {
-      message.error('Ошибка сохранения');
+
+      message.success("Роботу додано");
+      form.resetFields();
+      setOpen(false);
+      fetchData();
+    } catch (e) {
+      const msg =
+        e?.response?.data?.status?.message ||
+        e?.response?.data?.message ||
+        (e?.response?.status === 401 || e?.response?.status === 403
+          ? "Немає прав (потрібна роль Адмін)"
+          : "Помилка при додаванні роботи");
+      message.error(msg);
+      console.error("POST /api/Work error:", e?.response?.data || e);
     }
   };
 
-  const remove = (row) => {
+  const deleteWork = (row) => {
     Modal.confirm({
-      title: 'Удалить работу?',
+      title: "Видалити роботу?",
       onOk: async () => {
         try {
           await api.delete(`/api/Work/delete/${row.id}`);
-          message.success('Удалено');
+          message.success("Роботу видалено");
           fetchData();
-        } catch {
-          message.error('Ошибка удаления');
+        } catch (e) {
+          const msg =
+            e?.response?.data?.status?.message ||
+            (e?.response?.status === 401 || e?.response?.status === 403
+              ? "Немає прав (потрібна роль Адмін)"
+              : "Не вдалося видалити");
+          message.error(msg);
         }
-      }
+      },
     });
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id' },
+    { title: "ID", dataIndex: "id", key: "id", width: 90 },
     {
-      title: 'Название',
-      dataIndex: 'name',
+      title: "Назва",
+      dataIndex: "name",
+      key: "name",
       render: (t, r) => (
         <Input
           defaultValue={t}
-          onBlur={e => update({ ...r, name: e.target.value })}
+          onBlur={(e) => updateWork({ ...r, name: e.target.value })}
         />
-      )
+      ),
     },
     {
-      title: 'Описание',
-      dataIndex: 'description',
+      title: "Опис",
+      dataIndex: "description",
+      key: "description",
       render: (t, r) => (
         <Input
           defaultValue={t}
-          onBlur={e => update({ ...r, description: e.target.value })}
+          onBlur={(e) => updateWork({ ...r, description: e.target.value })}
         />
-      )
+      ),
     },
-    {
-      title: 'Категория',
-      dataIndex: ['workCategory', 'name'],
-      render: (t, r) => (
-        <Select
-          className="works-select"
-          defaultValue={r.workCategory?.id}
-          options={cats}
-          onChange={(v) =>
-            update({
-              ...r,
-              workCategory: {
-                id: v,
-                name: cats.find(c => c.value === v)?.label,
-              },
-            })
-          }
-        />
-      )
-    },
-    {
-      title: 'Действия',
-      render: (_, r) => (
-        <Button danger onClick={() => remove(r)}>
-          Удалить
-        </Button>
-      )
-    }
+
   ];
 
   return (
-    <div className="works-page">
-      <Space className="works-toolbar">
-        <Button type="primary" onClick={() => setOpen(true)}>Добавить</Button>
-        <Button onClick={fetchData}>Обновить</Button>
+    <>
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={() => setOpen(true)}>
+          Додати роботу
+        </Button>
+        <Button onClick={fetchData}>Оновити</Button>
       </Space>
 
       <Table
         rowKey="id"
-        columns={columns}
         dataSource={data}
+        columns={columns}
         loading={loading}
+        pagination={false}
       />
 
       <Modal
-        title="Новая работа"
+        title="Додати роботу"
         open={open}
         onCancel={() => setOpen(false)}
         onOk={() => form.submit()}
       >
-        <Form layout="vertical" form={form} onFinish={add}>
-          <Form.Item name="name" label="Название" rules={[{ required: true }]}>
+        <Form layout="vertical" form={form} onFinish={addWork}>
+          <Form.Item
+            name="name"
+            label="Назва"
+            rules={[{ required: true, message: "Вкажіть назву" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="description" label="Описание">
-            <Input />
+
+          <Form.Item name="description" label="Опис">
+            <Input.TextArea rows={3} />
           </Form.Item>
-          <Form.Item name="categoryId" label="Категория" rules={[{ required: true }]}>
-            <Select options={cats} />
+
+          <Form.Item
+            name="categoryId"
+            label="Категорія"
+            rules={[{ required: true, message: "Оберіть категорію" }]}
+          >
+            <Select options={cats} placeholder="Оберіть категорію" />
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </>
   );
 }

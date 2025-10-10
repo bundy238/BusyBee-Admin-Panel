@@ -4,33 +4,25 @@ import api from '../api/client';
 import logo from '../assets/logo.svg';
 import './Login.css';
 
-export default function Login() 
-{
+export default function Login() {
   const [loading, setLoading] = useState(false);
 
-  const onFinish = async (values) => 
-  {
-    try
-    {
+  const onFinish = async (values) => {
+    try {
       setLoading(true);
       const res = await api.post('/api/Auth/login', values);
       const token = res?.data?.data;
 
-      if (!token) 
-      {
-        throw new Error('Токен не получен');
+      if (!token) {
+        throw new Error('Токен не отримано');
       }
 
       localStorage.setItem('token', token);
       window.location.href = '/';
-    }
-    catch (e) 
-    {
+    } catch (e) {
       console.error(e);
-      message.error('Ошибка входа');
-    }
-    finally 
-    {
+      message.error('Помилка входу');
+    } finally {
       setLoading(false);
     }
   };
@@ -43,14 +35,14 @@ export default function Login()
         </div>
 
         <h3 className="login-title">
-          Administration login
+          Вхід до панелі адміністратора
         </h3>
 
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item 
             name="email" 
             label="Email" 
-            rules={[{ required: true, message: 'Введите email' }]}
+            rules={[{ required: true, message: 'Введіть email' }]}
           >
             <Input />
           </Form.Item>
@@ -58,7 +50,7 @@ export default function Login()
           <Form.Item 
             name="password" 
             label="Пароль" 
-            rules={[{ required: true, message: 'Введите пароль' }]}
+            rules={[{ required: true, message: 'Введіть пароль' }]}
           >
             <Input.Password />
           </Form.Item>
@@ -69,7 +61,7 @@ export default function Login()
             loading={loading} 
             block
           >
-            Войти
+            Увійти
           </Button>
         </Form>
       </Card>

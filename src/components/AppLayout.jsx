@@ -4,14 +4,12 @@ import "./AppLayout.css";
 
 const { Header, Sider, Content } = Layout;
 
-export default function AppLayout({ children }) 
-{
+export default function AppLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const selected = location.pathname;
 
-  const logout = () => 
-  {
+  const logout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
@@ -24,17 +22,17 @@ export default function AppLayout({ children })
         <Menu theme="dark" mode="inline" selectedKeys={[selected]}>
           <Menu.Item key="/users">
             <div className="text-panel">
-              <Link to="/users">Пользователи</Link>
+              <Link to="/users">Користувачі</Link>
             </div>
           </Menu.Item>
           <Menu.Item key="/categories">
             <div className="text-panel">
-              <Link to="/categories">Категории</Link>
+              <Link to="/categories">Категорії</Link>
             </div>
           </Menu.Item>
           <Menu.Item key="/works">
             <div className="text-panel">
-              <Link to="/works">Работы</Link>
+              <Link to="/works">Роботи</Link>
             </div>
           </Menu.Item>
         </Menu>
@@ -42,7 +40,7 @@ export default function AppLayout({ children })
 
       <Layout>
         <Header className="app-header">
-          <Button onClick={logout}>Выйти</Button>
+          <Button className="outButton" onClick={logout}>Вийти</Button>
         </Header>
         <Content className="app-content">{children}</Content>
       </Layout>

@@ -5,7 +5,7 @@
   
 .logo 
 {
-    color: #fff;
+    color: #fadfc4;
     padding: 16px;
     font-weight: 700;
     font-size: 16px;
@@ -31,4 +31,10 @@
 {
     color: #fff;    
     font-size: 18px;
+}
+
+.outButton
+{
+    background: #FE6575;
+    color: #fff;
 }
