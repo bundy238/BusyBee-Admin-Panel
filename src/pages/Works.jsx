@@ -4,6 +4,7 @@ import api from "../api/client";
 
 export default function Works() {
   const [data, setData] = useState([]);
+  const [filtered, setFiltered] = useState([]); // для пошуку
   const [cats, setCats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -23,7 +24,9 @@ export default function Works() {
     setLoading(true);
     try {
       const res = await api.get("/api/Work/all");
-      setData(res?.data?.data || res?.data || []);
+      const list = res?.data?.data || res?.data || [];
+      setData(list);
+      setFiltered(list); // копія для пошуку
     } catch {
       message.error("Не вдалося завантажити роботи");
     } finally {
@@ -36,13 +39,23 @@ export default function Works() {
     fetchData();
   }, []);
 
+  const handleSearch = (value) => {
+    const query = value.toLowerCase();
+    const result = data.filter(
+      (item) =>
+        (item.name && item.name.toLowerCase().includes(query)) ||
+        (item.description && item.description.toLowerCase().includes(query))
+    );
+    setFiltered(result);
+  };
+
   const addWork = async (values) => {
     try {
       const payload = {
         id: 0,
         name: values.name?.trim(),
         description: values.description?.trim() || "",
-        workCategory: { id: Number(values.categoryId) }, 
+        workCategory: { id: Number(values.categoryId) },
       };
 
       await api.post("/api/Work", payload, {
@@ -63,6 +76,34 @@ export default function Works() {
           : "Помилка при додаванні роботи");
       message.error(msg);
       console.error("POST /api/Work error:", e?.response?.data || e);
+    }
+  };
+
+  const updateWork = async (row) => {
+    try {
+      const payload = {
+        id: row.id,
+        name: row.name?.trim(),
+        description: row.description?.trim() || "",
+        workCategory: row.workCategory
+          ? { id: Number(row.workCategory.id) }
+          : { id: row.categoryId || 0 },
+      };
+
+      await api.put(`/api/Work/update/${row.id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      message.success("Роботу оновлено");
+      fetchData();
+    } catch (e) {
+      const msg =
+        e?.response?.data?.status?.message ||
+        (e?.response?.status === 401 || e?.response?.status === 403
+          ? "Немає прав (потрібна роль Адмін)"
+          : "Помилка при оновленні роботи");
+      message.error(msg);
+      console.error("PUT /api/Work error:", e?.response?.data || e);
     }
   };
 
@@ -110,7 +151,17 @@ export default function Works() {
         />
       ),
     },
-
+    {
+      title: "Дії",
+      key: "actions",
+      render: (_, row) => (
+        <Space>
+          <Button danger onClick={() => deleteWork(row)}>
+            Видалити
+          </Button>
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -120,11 +171,17 @@ export default function Works() {
           Додати роботу
         </Button>
         <Button onClick={fetchData}>Оновити</Button>
+        <Input.Search
+          placeholder="Пошук роботи..."
+          onChange={(e) => handleSearch(e.target.value)}
+          allowClear
+          style={{ width: 250 }}
+        />
       </Space>
 
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filtered}
         columns={columns}
         loading={loading}
         pagination={false}

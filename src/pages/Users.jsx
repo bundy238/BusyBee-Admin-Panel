@@ -11,6 +11,7 @@ const roleOptions = [
 
 export default function Users() {
   const [data, setData] = useState([]);
+  const [filtered, setFiltered] = useState([]); // для відфільтрованих даних
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
@@ -21,6 +22,7 @@ export default function Users() {
       const res = await api.get("/api/User/all");
       const items = res?.data?.data || res?.data || [];
       setData(items);
+      setFiltered(items); // зберігаємо копію
     } catch {
       message.error("Не вдалося завантажити користувачів");
     } finally {
@@ -29,6 +31,17 @@ export default function Users() {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const handleSearch = (value) => {
+    const query = value.toLowerCase();
+    const result = data.filter((item) =>
+      (item.userName && item.userName.toLowerCase().includes(query)) ||
+      (item.email && item.email.toLowerCase().includes(query)) ||
+      (item.fullName && item.fullName.toLowerCase().includes(query)) ||
+      (item.phoneNumber && item.phoneNumber.toLowerCase().includes(query))
+    );
+    setFiltered(result);
+  };
 
   const addUser = async (values) => {
     try {
@@ -52,7 +65,6 @@ export default function Users() {
         phoneNumber: row.phoneNumber,
         userRoles: row.userRoles || []   
       };
-
       await api.put(`/api/User/update/${row.id}`, payload);
       message.success("Збережено");
       fetchData();
@@ -74,16 +86,6 @@ export default function Users() {
         }
       }
     });
-  };
-
-  const changeRole = async (row, newRole) => {
-    try {
-      await api.post(`/api/User/change-role/${row.id}?newUserRole=${encodeURIComponent(newRole)}`);
-      message.success("Роль змінено");
-      fetchData();
-    } catch {
-      message.error("Помилка при зміні ролі");
-    }
   };
 
   const columns = [
@@ -121,18 +123,6 @@ export default function Users() {
       )
     },
     {
-      title: "Роль",
-      key: "role",
-      render: (_, r) => (
-        <Select
-          className="role-select"
-          options={roleOptions}
-          value={r.userRoles?.[0]?.toLowerCase()}
-          onChange={(v) => changeRole(r, v)}
-        />
-      )
-    },
-    {
       title: "Дії",
       key: "actions",
       render: (_, r) => (
@@ -143,14 +133,20 @@ export default function Users() {
 
   return (
     <div className="users-page">
-      <Space className="users-actions">
+      <Space className="users-actions" style={{ marginBottom: 16 }}>
         <Button type="primary" onClick={() => setOpen(true)}>Додати</Button>
         <Button onClick={fetchData}>Оновити</Button>
+        <Input.Search
+          placeholder="Пошук користувача..."
+          onChange={(e) => handleSearch(e.target.value)}
+          allowClear
+          style={{ width: 250 }}
+        />
       </Space>
 
       <Table
         rowKey={(r) => r.id || r.email}
-        dataSource={data}
+        dataSource={filtered}
         columns={columns}
         loading={loading}
       />
